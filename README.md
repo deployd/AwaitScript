@@ -97,3 +97,9 @@ Syntax:
     console.log((await fs.stat('myfile.txt')).size);
 
 Right now you can only use `await` as a fire-and-forget option, or assign it to a variable. Ideally, you could insert `await [function]` anywhere into your code and use its value inline.
+
+### Support for non-conventional callbacks
+
+Some functions in Node (like `fs.exists`) don't take a traditional `fn(err, result)` callback. Others have multiple results (e.g. `fn(err, result1, result2)`).
+
+It should be possible to call these (and possibly create functions like them) with AwaitScript. I have no idea what the syntax will be on this.
