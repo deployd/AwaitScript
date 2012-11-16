@@ -72,7 +72,7 @@ I'll start with `if` statements, and slowly try to support more, like `try/catch
 
 ### Parallel processes
 
-I'm not sure of the best syntax for this, but Yyu should be able to use the `async` keyword to start an asynchronous operation and get its result later.
+I'm not sure of the best syntax for this, but you should be able to use the `async` keyword to start an asynchronous operation and get its result later.
 
 Either this:
 
