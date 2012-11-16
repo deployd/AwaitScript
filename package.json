@@ -1,0 +1,12 @@
+{
+  "name": "awaitscript",
+  "version": "0.0.0",
+  "description": "A proof-of-concept compile-to-javascript language that lets you write async and read sync.",
+  "main": "compiler.js",
+  "repository": "",
+  "author": "",
+  "license": "BSD",
+  "dependencies": {
+    "shelljs": "0.0.8"
+  }
+}
