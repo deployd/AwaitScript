@@ -13,17 +13,22 @@ console.log();
 
 var source = sh.cat('sample.ws');
 
-var ast = esprima.parse(source);
-
 if (!sh.test('-d', 'debug')) sh.mkdir('debug');
 
-JSON.stringify(ast, null, '  ').to('debug/sample-ast.json');
+try {
+  var ast = esprima.parse(source, {loc: true});
+  JSON.stringify(esprima.parse(source), null, '  ').to('debug/sample-ast.json');
 
-var transformedAst = transform(ast);
-JSON.stringify(transformedAst, null, '  ').to('debug/sample-transformed-ast.json');
+  var transformedAst = transform(ast);
+  JSON.stringify(transformedAst, null, '  ').to('debug/sample-transformed-ast.json');
 
-var output = escodegen.generate(transformedAst);
+  var output = escodegen.generate(transformedAst);
+} catch(ex) {
+  console.error();
+  console.error(ex.message);
+}
 
-output.to('sample.js');
-
-eval(output);
+if (output) {
+  output.to('sample.js');
+  eval(output);
+}
