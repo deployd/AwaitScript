@@ -103,3 +103,25 @@ Right now you can only use `await` as a fire-and-forget option, or assign it to 
 Some functions in Node (like `fs.exists`) don't take a traditional `fn(err, result)` callback. Others have multiple results (e.g. `fn(err, result1, result2)`).
 
 It should be possible to call these (and possibly create functions like them) with AwaitScript. I have no idea what the syntax will be on this.
+
+### Async immediate calls
+
+Syntax:
+
+    var jsonData = async {
+        var file = await fs.readFile('config.json', 'utf-8');
+        return JSON.parse(file);
+    };
+
+    var cleanFolder = async {
+         await fs.rmdir('mydir/img');
+         await fs.rmdir('mydir');
+    };
+
+    // Do something else
+
+    console.log(await jsonData);
+
+    await cleanFolder;
+
+This allows you to define a chain of processes (and optionally, a return value) that must happen asynchronously, without losing scope.
