@@ -26,6 +26,7 @@ try {
 } catch(ex) {
   console.error();
   console.error(ex.message);
+  // console.error(ex.stack);
 }
 
 if (output) {

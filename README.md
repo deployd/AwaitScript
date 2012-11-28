@@ -38,11 +38,44 @@ Compiles to:
       console.log(file);
     });
 
+## Asynchronous functions (incomplete)
+
+You can use the `async` keyword before a function definition to turn it into an asynchronous function with a callback. This allows you to use the `await` keyword inside the function body. An asynchronous function can also be awaited like any other function with a callback.
+
+Syntax:
+
+    async function doSomethingAsync(dir) {
+      await fs.rmdir(dir + '/subdir');
+      await fs.rmdir(dir);
+    }
+
+    await doSomethingAsync();
+    console.log("Finished");
+
+Compiles to:
+
+    function doAsyncThing(fn) {
+      fs.rmdir(dir + '/subdir', function(err) {
+        if (err) return fn(err);
+        fs.rmdir(dir, function(err) {
+          if (err) return fn(err);
+          fn();
+        });
+      });
+    }
+
+    doSomethingAsync(function(err) {
+      if (err) throw err;
+      console.log("Finished!");
+    });
+
+*Note: does not yet support the `return` keyword*
+
 ## Planned features
 
 AwaitScript is *extremely* immature. This is only a proof-of-concept that I plan to develop.
 
-### Asynchronous functions
+### Asynchronous functions with return values
 
 Syntax:
 
