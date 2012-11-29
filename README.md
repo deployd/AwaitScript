@@ -75,6 +75,29 @@ Compiles to:
 
 AwaitScript is *extremely* immature. This is only a proof-of-concept that I plan to develop.
 
+### JIT instead of Transpile
+
+Instead of running a transpiling step, AwaitScript runs a JIT compiler inside your existing node modules. This means module developers can use AwaitScript features without having to publish compiler steps or compiled code. Just include the AwaitScript node module as a dependency of your module and start using AwaitScript features. Including `require('awaitscript')` in any node module enables the JIT compiler for the current process.
+
+_Note ~ this will not compile code in child processes / or VMs_
+
+Usage:
+
+    // my-module.js
+    require('awaitscript').run(); // must be first code run in a module
+
+    exports.txt = await require('fs').readFile('./hello.txt'));
+
+Requiring and using a module written with AwaitScript is the exact same as any other module
+
+    // my-app.js
+    console.log(require('./my-module.js'));
+
+Since this is all 100% compatible with regular node, running the app is no different
+
+     $ node my-app.js
+     Hello World
+
 ### Asynchronous functions with return values
 
 Syntax:
@@ -158,3 +181,7 @@ Syntax:
     await cleanFolder;
 
 This allows you to define a chain of processes (and optionally, a return value) that must happen asynchronously, without losing scope.
+
+### Async Debugging
+
+Using `await` and `async` will automatically add contextual information to the current `domain`. This means wherever an error is caught it will contain contextual information such as which `async` function was last called before the error, its line number in your source (instead of the compiled source).
