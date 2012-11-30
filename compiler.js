@@ -1,8 +1,6 @@
 /*jshint evil:true, boss:true */
 
 var sh = require('shelljs')
-  , uglify = require('uglify-js2')
-  , burrito = require('burrito')
   , esprima = require('./lib/esprima')
   , escodegen = require('./lib/escodegen')
   , transform = require('./lib/transform').transform;
