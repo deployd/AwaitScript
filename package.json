@@ -1,12 +1,25 @@
 {
   "name": "awaitscript",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A proof-of-concept compile-to-javascript language that lets you write async and read sync.",
-  "main": "compiler.js",
-  "repository": "",
-  "author": "",
-  "license": "BSD",
+  "main": "index.js",
+  "repository": "git@github.com:deployd/AwaitScript.git",
+  "author": "Dallon Feldner",
+  "contributors": [
+    {
+      "name": "Dallon Feldner",
+      "email": "dallon@deployd.com"
+    },
+    {
+      "name": "Ritchie Martori",
+      "email": "ritchie@deployd.com"
+    }
+  ],
+  "license": "MIT",
   "dependencies": {
     "shelljs": "0.0.8"
+  },
+  "devDependencies": {
+    "mocha": "~1.7.3"
   }
 }
