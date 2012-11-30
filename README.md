@@ -38,7 +38,7 @@ Compiles to:
       console.log(file);
     });
 
-## Asynchronous functions (incomplete)
+## Asynchronous functions
 
 You can use the `async` keyword before a function definition to turn it into an asynchronous function with a callback. This allows you to use the `await` keyword inside the function body. An asynchronous function can also be awaited like any other function with a callback.
 
@@ -47,29 +47,30 @@ Syntax:
     async function doSomethingAsync(dir) {
       await fs.rmdir(dir + '/subdir');
       await fs.rmdir(dir);
+
+      return "Finished!";
     }
 
-    await doSomethingAsync();
-    console.log("Finished");
+    var result = await doSomethingAsync();
+    console.log(result);
 
 Compiles to:
 
     function doAsyncThing(fn) {
       fs.rmdir(dir + '/subdir', function(err) {
-        if (err) return fn(err);
+        if (err) return fn && fn(err);
         fs.rmdir(dir, function(err) {
-          if (err) return fn(err);
-          fn();
+          if (err) return fn && fn(err);
+          return fn && fn("Finished!");
         });
       });
     }
 
-    doSomethingAsync(function(err) {
+    doSomethingAsync(function(err, result) {
       if (err) throw err;
-      console.log("Finished!");
+      console.log(result);
     });
 
-*Note: does not yet support the `return` keyword*
 
 ## Planned features
 
@@ -98,19 +99,6 @@ Since this is all 100% compatible with regular node, running the app is no diffe
      $ node my-app.js
      Hello World
 
-### Asynchronous functions with return values
-
-Syntax:
-
-    async function doSomethingAsync() {
-      var file = await fs.readFile('myfile.txt', 'utf-8');
-      return file;
-    }
-
-Will compile to a function with the signature `doSomethingAsync(fn)`, with a callback `fn(err, file)`. This can be called from regular Node JavaScript, or, more usefully, awaited:
-
-    var file = await doSomethingAsync();
-
 ### Flow control
 
 Syntax:
@@ -128,23 +116,14 @@ I'll start with `if` statements, and slowly try to support more, like `try/catch
 
 ### Parallel processes
 
-I'm not sure of the best syntax for this, but you should be able to use the `async` keyword to start an asynchronous operation and get its result later.
+You should be able to use the `async` keyword to start an asynchronous operation and get its result later.
 
-Either this:
+Syntax:
 
     var file1 = async fs.readFile('myfile.txt', 'utf-8') 
       , file2 = async fs.readFile('myotherfile.txt', 'utf-8');
 
     console.log((await file1) + " " + (await file2));
-
-Or: 
-
-    var file1 = async fs.readFile('myfile.txt', 'utf-8') 
-      , file2 = async fs.readFile('myotherfile.txt', 'utf-8');
-
-    await file1, file2;
-
-    console.log(file1 + " " + file2);
 
 ### Anonymous awaits
 
@@ -152,7 +131,7 @@ Syntax:
 
     console.log((await fs.stat('myfile.txt')).size);
 
-Right now you can only use `await` as a fire-and-forget option, or assign it to a variable. Ideally, you could insert `await [function]` anywhere into your code and use its value inline.
+Right now you can only use `await` as a procedural function call, or assign its result to a variable. Ideally, you could insert `await [function]` anywhere into your code and use its value inline.
 
 ### Support for non-conventional callbacks
 
