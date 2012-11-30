@@ -2,7 +2,7 @@ var fs = require('fs'), file = 'not loaded';
 function doAsyncThing(fn) {
     fs.readFile('read-this-file.txt', 'utf-8', function (err, data) {
         if (err)
-            return fn(err);
+            return fn && fn(err);
         file = data;
         fn();
     });
