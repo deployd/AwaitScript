@@ -156,9 +156,51 @@ Right now you can only use `await` as a fire-and-forget option, or assign it to 
 
 ### Support for non-conventional callbacks
 
-Some functions in Node (like `fs.exists`) don't take a traditional `fn(err, result)` callback. Others have multiple results (e.g. `fn(err, result1, result2)`).
 
-It should be possible to call these (and possibly create functions like them) with AwaitScript. I have no idea what the syntax will be on this.
+Some functions in Node (like `fs.exists`) don't take a traditional `fn(err, result)` callback; these should be awaitable by using `awaitx`, which does not check for an error in the callback and returns the first argument.
+
+Syntax:
+    if (awaitx fs.exists('somefile.txt')) {
+        console.log("File exists!");        
+    }
+    
+You can also create functions without an error callback by using the `asyncx` keyword:
+
+    require('async');
+    
+    var directories = awaitx async.filter(['foo', 'bar.txt', 'baz'], asyncx function(file) {
+        try {
+            return (await fs.stat(file)).isDirectory();
+        } catch (ex) {
+            return false;
+        }
+    });
+    
+(The async.filter function does not expect an error callback in its iterator function)
+
+### Support for callbacks with multiple results
+
+Some functions return multiple results from their callback, for example, the [request](https://github.com/mikeal/request) library has a callback signature of `fn(error, response, body)`.
+
+Syntax:
+
+    // Get both arguments
+    var [response, body] = await request('http://my-api/posts');
+    
+    // Only interested in the body
+    var body = await[1] request('http://my-api/posts');
+    
+To return multiple results from an async function, pass a comma-seperated list to "return":
+
+    async function getFiles(dir) {
+        var file1 = async fs.readFile(dir + "/file1.txt");
+        var file2 = async fs.readFile(dir + "/file1.txt");
+        
+        return await file1, await file2;
+    }
+    
+    var [file1, file2] = await getFiles('./config');
+    
 
 ### Async immediate calls
 
@@ -182,6 +224,34 @@ Syntax:
 
 This allows you to define a chain of processes (and optionally, a return value) that must happen asynchronously, without losing scope.
 
+### Using callbacks
+
+Sometimes it makes the most sense to use callbacks, such as with streams or events. You should be able to drop back into callback-style coding, and await the result. No special syntax is needed for this, but it depends on some of the above features. Just drop into a standard synchronous function with a callback:
+
+Pattern:
+
+    var task = async (function(callback) {
+                    var readStream = fs.createReadStream("foo.txt");
+                    var writeStream = fs.createWriteStream("bar.txt");
+                    readStream.on('data', function(data) {
+                        writeStream.write(data.toUpperCase());
+                    }).on('error', function(err) {
+                        writeStream.destroy();
+                        callback(err);
+                    )).on('end', function() {
+                        callback();
+                    }); 
+                    
+                    writeStream.on('error', function(err) {
+                        readStream.destroy();
+                        callback(err);
+                    });
+               })();
+               
+    doSomethingElse();
+    
+    await task;
+    
 ### Async Debugging
 
 Using `await` and `async` will automatically add contextual information to the current `domain`. This means wherever an error is caught it will contain contextual information such as which `async` function was last called before the error, its line number in your source (instead of the compiled source).
