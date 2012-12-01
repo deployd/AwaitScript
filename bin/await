@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+var path = require('path');
+
+// enable AwaitScript
+require('../');
+
+// entry
+require(path.join(process.cwd(), process.argv[2]));

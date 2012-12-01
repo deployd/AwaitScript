@@ -2,7 +2,35 @@
 
 A proof-of-concept JavaScript compiler designed to let you write asynchronous code as if it were synchronous.
 
-The compiler is extremely early, but you can run `node compiler.js` to compile and run the included `sample.ws` file; you can look at `sample.js` to see what it outputs.
+## Hello World
+
+Call any node-style async function and get the result without blocking or managing callbacks.
+
+    // index.js
+    require('awaitscript');
+    require('./hello.ws');
+
+    // hello.ws
+    function bake(fn) {
+      setTimeout(function() {
+        fn(null, Math.PI);
+      }, 10);
+    }
+    
+    // start a non blocking task
+    var pi = bake();
+    
+    // imediately log this
+    console.log( 'Hello, World. Can I please have some pi?' );
+    
+    // only wait when we have to, without callbacks
+    console.log( await pi ); // 3.141592653589793
+
+Run the above code with `node` as you would **any other node program**.
+
+    Ω node index.js
+    Hello, World. Can I please have some pi?
+    3.141592653589793
 
 ## Philosophy
 
@@ -71,12 +99,7 @@ Compiles to:
       console.log(result);
     });
 
-
-## Planned features
-
-AwaitScript is *extremely* immature. This is only a proof-of-concept that I plan to develop.
-
-### JIT instead of Transpile
+### Use in Existing Node Programs
 
 Instead of running a transpiling step, AwaitScript runs a JIT compiler inside your existing node modules. This means module developers can use AwaitScript features without having to publish compiler steps or compiled code. Just include the AwaitScript node module as a dependency of your module and start using AwaitScript features. Including `require('awaitscript')` in any node module enables the JIT compiler for the current process.
 
@@ -85,8 +108,10 @@ _Note ~ this will not compile code in child processes / or VMs_
 Usage:
 
     // my-module.js
-    require('awaitscript').run(); // must be first code run in a module
+    require('awaitscript');
+    require('some-await-script.ws');
 
+    // some-await-script.ws
     exports.txt = await require('fs').readFile('./hello.txt'));
 
 Requiring and using a module written with AwaitScript is the exact same as any other module
@@ -98,6 +123,10 @@ Since this is all 100% compatible with regular node, running the app is no diffe
 
      $ node my-app.js
      Hello World
+
+## Planned features
+
+AwaitScript is *extremely* immature. This is only a proof-of-concept that I plan to develop.
 
 ### Flow control
 
