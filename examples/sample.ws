@@ -18,9 +18,10 @@ await doAsyncThing();
 
 console.log(file);
 
-var file2 = await fs.readFile('read-this-file.txt', 'utf-8');
-
-console.log("file2: " + file2 + " too");
+var file2async = async fs.readFile('read-this-file.txt', 'utf-8');
 
 var file3 = await getUppercaseFile();
+var file2 = await file2async();
+
+console.log("file2: " + file2 + " too");
 console.log("file3: " + file3);
