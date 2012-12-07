@@ -4,6 +4,10 @@ var compiler = require('./lib/compiler');
 var path = require('path');
 var sh = require('shelljs');
 
+var esprima = require('./lib/esprima')
+  , escodegen = require('./lib/escodegen')
+  , transform = require('./lib/transform').transform;
+
 var DEBUG = __dirname + "/debug";
 var EXAMPLES = __dirname + "/examples";
 
@@ -60,10 +64,27 @@ if (!sample) {
 var fileName = path.basename(sample, '.ws');
 
 var source = sh.cat(sample);
-var result = compiler.compile(source);
+var ast, transformed, output;
+try {
+  ast = esprima.parse(source, {loc: true});
+  save(removeLoc(ast), fileName + '-ast.json');
+  transformed = transform(ast);
+  save(removeLoc(transformed), fileName + '-transformed-ast.json');
+  output = escodegen.generate(transformed);
+  save(output, fileName + '.js');
+} catch (ex) {
+  
+  if (ex.messages) {
+    console.error(ex.message);
+    ex.messages.forEach(function(err) {
+      console.error(' - ' + err);
+    });
+    if (ex.newAst) {
+      save(removeLoc(ex.newAst), fileName + '-transformed-ast.json');
+    }
+  } else {
+    console.error(ex.stack);
+  }
+}
 
-save(removeLoc(result.ast), fileName + '-ast.json');
-save(removeLoc(result.transformed), fileName + '-transformed-ast.json');
-save(result.output, fileName + '.js');
-
-eval(result.output);
+eval(output);

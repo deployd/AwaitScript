@@ -1,10 +1,12 @@
 var fs = require('fs')
   , file = "not loaded";
 
-//var doAsyncThing = async function doAsyncThing() {
-async function doAsyncThing() {
+var doAsyncThing = async function() {
   var data = await fs.readFile('read-this-file.txt', 'utf-8');
   file = data;
+  if (!file) {
+    throw new Error("No data loaded");
+  }
 }
 
 async function getUppercaseFile() {
