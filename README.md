@@ -18,7 +18,7 @@ Call any node-style async function and get the result without blocking or managi
     }
     
     // start a non blocking task
-    var pi = bake();
+    var pi = defer bake();
     
     // imediately log this
     console.log( 'Hello, World. Can I please have some pi?' );
@@ -34,7 +34,7 @@ Run the above code with `node` as you would **any other node program**.
 
 ## Philosophy
 
-AwaitScript is designed for Node.js; specifically the `fn(error, result)` callback pattern. All JavaScript should compile 1:1 unless you use the `await` or `async` keywords. 
+AwaitScript is designed for Node.js; specifically the `fn(error, result)` callback pattern. All JavaScript should compile 1:1 unless you use the special AwaitScript keywords (`await`, `async`, `defer`). 
 
 Libraries that follow Node's conventions should "just work", and functions you create in AwaitScript should be callable from Node without any hint that they were written in anything but Node and JavaScript.
 
@@ -145,14 +145,14 @@ I'll start with `if` statements, and slowly try to support more, like `try/catch
 
 ### Parallel processes
 
-You should be able to use the `async` keyword to start an asynchronous operation and get its result later.
+You should be able to use the `defer` keyword to start an asynchronous operation and get its result later.
 
 Syntax:
 
-    var file1 = async fs.readFile('myfile.txt', 'utf-8') 
-      , file2 = async fs.readFile('myotherfile.txt', 'utf-8');
+    var file1 = defer fs.readFile('myfile.txt', 'utf-8') 
+      , file2 = defer fs.readFile('myotherfile.txt', 'utf-8');
 
-    console.log((await file1) + " " + (await file2));
+    console.log(await file1 + " " + await file2);
 
 ### Anonymous awaits
 
@@ -184,7 +184,7 @@ You can also create functions without an error callback by using the `asyncx` ke
         }
     });
     
-(The async.filter function does not expect an error callback in its iterator function)
+(The `async.filter` function does not expect an error callback in its iterator function)
 
 ### Support for callbacks with multiple results
 
@@ -201,8 +201,8 @@ Syntax:
 To return multiple results from an async function, pass a comma-seperated list to "return":
 
     async function getFiles(dir) {
-        var file1 = async fs.readFile(dir + "/file1.txt");
-        var file2 = async fs.readFile(dir + "/file1.txt");
+        var file1 = defer fs.readFile(dir + "/file1.txt");
+        var file2 = defer fs.readFile(dir + "/file1.txt");
         
         return await file1, await file2;
     }
@@ -210,16 +210,16 @@ To return multiple results from an async function, pass a comma-seperated list t
     var [file1, file2] = await getFiles('./config');
     
 
-### Async immediate calls
+### Defer blocks
 
 Syntax:
 
-    var jsonData = async {
+    var jsonData = defer {
         var file = await fs.readFile('config.json', 'utf-8');
         return JSON.parse(file);
     };
 
-    var cleanFolder = async {
+    var cleanFolder = defer {
          await fs.rmdir('mydir/img');
          await fs.rmdir('mydir');
     };
@@ -232,13 +232,30 @@ Syntax:
 
 This allows you to define a chain of processes (and optionally, a return value) that must happen asynchronously, without losing scope.
 
+### Overriding the callback
+
+You should be able to skip the callback for the current `async` function in some cases; for instance, when writing Express middleware, you don't want to call `next()` if you call `res.end()`, but in AwaitScript, `next()` is implicit. You should be able to use the `returnx` keyword to just return from the function without running the callback.  
+
+Syntax:
+    
+    app.use(async function(req, res) {
+        if (req.url === "/hello") {
+            res.end("Hello, World!");
+            returnx;
+        }
+    });
+    app.use(async function(req, res) {
+        res.end("You didn't go to /hello");
+        returnx;
+    });
+
 ### Using callbacks
 
-Sometimes it makes the most sense to use callbacks, such as with streams or events. You should be able to drop back into callback-style coding, and await the result. No special syntax is needed for this, but it depends on some of the above features. Just drop into a standard synchronous function with a callback:
+Sometimes callbacks are actually the best way to do something, such as with streams or events. You should be able to drop back into callback-style coding, and await the result. No special syntax is needed for this, but it depends on some of the above features. Just drop into a standard synchronous function with a callback:
 
 Pattern:
 
-    var task = async (function(callback) {
+    var task = defer function(callback) {
                     var readStream = fs.createReadStream("foo.txt");
                     var writeStream = fs.createWriteStream("bar.txt");
                     readStream.on('data', function(data) {
@@ -246,7 +263,7 @@ Pattern:
                     }).on('error', function(err) {
                         writeStream.destroy();
                         callback(err);
-                    )).on('end', function() {
+                    }).on('end', function() {
                         callback();
                     }); 
                     
@@ -254,7 +271,7 @@ Pattern:
                         readStream.destroy();
                         callback(err);
                     });
-               })();
+               };
                
     doSomethingElse();
     
