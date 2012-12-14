@@ -66,6 +66,18 @@ Compiles to:
       console.log(file);
     });
 
+You can also use `await` in the body of an expression; AwaitScript will create a temporary variable:
+
+    console.log(await fs.readFile('myfile.txt', 'utf-8'));
+
+Compiles to:
+
+    fs.readFile('myfile.txt', 'utf-8', function(err, __a) {
+      if (err) throw err;
+      console.log(__a);
+    });
+
+
 ## Asynchronous functions
 
 You can use the `async` keyword before a function definition to turn it into an asynchronous function with a callback. This allows you to use the `await` keyword inside the function body. An asynchronous function can also be awaited like any other function with a callback.
@@ -99,6 +111,46 @@ Compiles to:
       console.log(result);
     });
 
+### Parallel processes
+
+You can use the `defer` keyword to start an asynchronous operation and get its result later.
+
+Syntax:
+
+    var file1 = defer fs.readFile('myfile.txt', 'utf-8') 
+      , file2 = defer fs.readFile('myotherfile.txt', 'utf-8');
+
+    console.log(await file1 + " " + await file2);
+
+### Using callbacks
+
+Sometimes callbacks are actually the best way to do something, such as with streams or events. You can drop back into callback-style coding, and await the result. No special syntax is needed for this. Just defer (or await) a standard synchronous function with a callback:
+
+Pattern:
+
+    var task = defer function(callback) {
+                    var readStream = fs.createReadStream("foo.txt");
+                    var writeStream = fs.createWriteStream("bar.txt");
+                    readStream.on('data', function(data) {
+                        writeStream.write(data.toUpperCase());
+                    }).on('error', function(err) {
+                        writeStream.destroy();
+                        callback(err);
+                    }).on('end', function() {
+                        callback();
+                    }); 
+                    
+                    writeStream.on('error', function(err) {
+                        readStream.destroy();
+                        callback(err);
+                    });
+               };
+               
+    doSomethingElse();
+
+    await task;
+
+
 ### Use in Existing Node Programs
 
 Instead of running a transpiling step, AwaitScript runs a JIT compiler inside your existing node modules. This means module developers can use AwaitScript features without having to publish compiler steps or compiled code. Just include the AwaitScript node module as a dependency of your module and start using AwaitScript features. Including `require('awaitscript')` in any node module enables the JIT compiler for the current process.
@@ -114,19 +166,19 @@ Usage:
     // some-await-script.ws
     exports.txt = await require('fs').readFile('./hello.txt'));
 
-Requiring and using a module written with AwaitScript is the exact same as any other module
+Requiring and using a module written with AwaitScript is the exact same as any other module:
 
     // my-app.js
     console.log(require('./my-module.js'));
 
-Since this is all 100% compatible with regular node, running the app is no different
+Since this is all 100% compatible with regular node, running the app is no different:
 
      $ node my-app.js
      Hello World
 
 ## Planned features
 
-AwaitScript is *extremely* immature. This is only a proof-of-concept that I plan to develop.
+AwaitScript is *extremely* immature. This is only a proof-of-concept that we plan to develop.
 
 ### Flow control
 
@@ -142,25 +194,6 @@ Syntax:
     console.log("Loaded file", file);
 
 I'll start with `if` statements, and slowly try to support more, like `try/catch`, `for` and `while`. Keep in mind that for iterating over loops, the [async](https://github.com/caolan/async) library will be ideal due to AwaitScript's compatability with Node.
-
-### Parallel processes
-
-You should be able to use the `defer` keyword to start an asynchronous operation and get its result later.
-
-Syntax:
-
-    var file1 = defer fs.readFile('myfile.txt', 'utf-8') 
-      , file2 = defer fs.readFile('myotherfile.txt', 'utf-8');
-
-    console.log(await file1 + " " + await file2);
-
-### Anonymous awaits
-
-Syntax:
-
-    console.log((await fs.stat('myfile.txt')).size);
-
-Right now you can only use `await` as a procedural function call, or assign its result to a variable. Ideally, you could insert `await [function]` anywhere into your code and use its value inline.
 
 ### Support for non-conventional callbacks
 
@@ -230,7 +263,7 @@ Syntax:
 
     await cleanFolder;
 
-This allows you to define a chain of processes (and optionally, a return value) that must happen asynchronously, without losing scope.
+This allows you to define a chain of processes (and optionally, a return value) that must happen asynchronously, without losing scope. This is reminiscent of "fcall" from the the [q](https://github.com/kriskowal/q) library, but this works natively with Node conventions without having to use wrappers.
 
 ### Overriding the callback
 
@@ -248,34 +281,6 @@ Syntax:
         res.end("You didn't go to /hello");
         returnx;
     });
-
-### Using callbacks
-
-Sometimes callbacks are actually the best way to do something, such as with streams or events. You should be able to drop back into callback-style coding, and await the result. No special syntax is needed for this, but it depends on some of the above features. Just drop into a standard synchronous function with a callback:
-
-Pattern:
-
-    var task = defer function(callback) {
-                    var readStream = fs.createReadStream("foo.txt");
-                    var writeStream = fs.createWriteStream("bar.txt");
-                    readStream.on('data', function(data) {
-                        writeStream.write(data.toUpperCase());
-                    }).on('error', function(err) {
-                        writeStream.destroy();
-                        callback(err);
-                    }).on('end', function() {
-                        callback();
-                    }); 
-                    
-                    writeStream.on('error', function(err) {
-                        readStream.destroy();
-                        callback(err);
-                    });
-               };
-               
-    doSomethingElse();
-    
-    await task;
     
 ### Async Debugging
 
