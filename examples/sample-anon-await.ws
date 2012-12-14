@@ -14,9 +14,9 @@ async function getUppercaseFile() {
   return data.toUpperCase();
 }
 
-var file1 = async doAsyncThing();
-var file2 = async fs.readFile('read-this-file.txt', 'utf-8');
-var file3 = async getUppercaseFile();
+var file1 = defer doAsyncThing();
+var file2 = defer fs.readFile('read-this-file.txt', 'utf-8');
+var file3 = defer getUppercaseFile();
 
 await file1;
 console.log(file);
